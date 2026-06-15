@@ -1,91 +1,192 @@
-import Stripe from "stripe"
-import UserModel from "../models/user.model.js";
+import crypto from "crypto"
 import dotenv from "dotenv"
+import UserModel from "../models/user.model.js"
+
 dotenv.config()
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("Stripe secret key missing in .env");
+const CREDIT_MAP = {
+  50: 200,
+  100: 450,
+  200: 1000
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+const BRANDING_AMOUNT = 10
 
-const CREDIT_MAP = {
-  100: 50,
-  200: 120,
-  500: 300,
-};
+const razorpayAuth = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID
+  const keySecret = process.env.RAZORPAY_KEY_SECRET
+  if (!keyId || !keySecret) {
+    throw new Error("Razorpay keys missing in .env")
+  }
+  return {
+    keyId,
+    authHeader: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`
+  }
+}
 
-export const createCreditsOrder = async (req,res) => {
-    try {
-        const userId = req.userId
-        const {amount} = req.body;
+export const createCreditsOrder = async (req, res) => {
+  try {
+    const userId = req.userId
+    const amount = Number(req.body.amount)
+    const credits = CREDIT_MAP[amount]
 
-         if (!CREDIT_MAP[amount]) {
-      return res.status(400).json({
-        message: "Invalid credit plan",
-      });
+    if (!credits) {
+      return res.status(400).json({ message: "Invalid credit plan" })
     }
 
-    const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-      payment_method_types: ["card"],
-      success_url: `${process.env.CLIENT_URL}/payment-success`,
-      cancel_url: `${process.env.CLIENT_URL}/payment-failed`,
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: `${CREDIT_MAP[amount]} Credits`,
-            },
-            unit_amount: amount * 100,
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        userId,
-        credits: CREDIT_MAP[amount],
+    const { keyId, authHeader } = razorpayAuth()
+    const shortUserId = String(userId || "user").slice(-8)
+    const receipt = `cr_${shortUserId}_${Date.now().toString(36)}`.slice(0, 40)
+
+    const response = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json"
       },
+      body: JSON.stringify({
+        amount: amount * 100,
+        currency: "INR",
+        receipt,
+        notes: {
+          userId,
+          credits
+        }
+      })
     })
 
-    res.status(200).json({ url: session.url });
-    } catch (error) {
-         res.status(500).json({ message: "Stripe error" });
+    const order = await response.json()
+    if (!response.ok) {
+      return res.status(500).json({ message: order?.error?.description || "Razorpay order failed" })
     }
+
+    res.status(200).json({
+      keyId,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      credits
+    })
+  } catch (error) {
+    const message = error?.message === "fetch failed"
+      ? "Razorpay API se connect nahi ho pa raha. Backend ko internet access ke saath restart karein."
+      : error.message || "Razorpay error"
+    res.status(500).json({ message })
+  }
 }
 
+export const createBrandingOrder = async (req, res) => {
+  try {
+    const userId = req.userId
+    const { keyId, authHeader } = razorpayAuth()
+    const shortUserId = String(userId || "user").slice(-8)
+    const receipt = `br_${shortUserId}_${Date.now().toString(36)}`.slice(0, 40)
 
-export const stripeWebhook = async (req,res) => {
-    const sig = req.headers["stripe-signature"]
-    let event;
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body,
-            sig,
-            process.env.STRIPE_WEBHOOK_SECRET
-        )   
-    } catch (error) {
-         console.log("❌ Webhook signature error:", error.message);
-    return res.status(400).send("Webhook Error");
+    const response = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        amount: BRANDING_AMOUNT * 100,
+        currency: "INR",
+        receipt,
+        notes: {
+          userId,
+          purpose: "custom_branding"
+        }
+      })
+    })
+
+    const order = await response.json()
+    if (!response.ok) {
+      return res.status(500).json({ message: order?.error?.description || "Branding order failed" })
     }
 
-  if(event.type === "checkout.session.completed"){
-    const session = event.data.object;
-
-    const userId = session.metadata.userId;
-    const creditsToAdd = Number(session.metadata.credits);
-
-    if (!userId || !creditsToAdd) {
-    return res.status(400).json({ message: "Invalid metadata" });
+    return res.status(200).json({
+      keyId,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency
+    })
+  } catch (error) {
+    const message = error?.message === "fetch failed"
+      ? "Razorpay API se connect nahi ho pa raha. Backend ko internet access ke saath restart karein."
+      : error.message || "Branding payment error"
+    return res.status(500).json({ message })
   }
+}
 
-  const user = await UserModel.findByIdAndUpdate(userId , {
-    $inc: { credits: creditsToAdd },
-      $set: { isCreditAvailable: true },
-  },{new:true})
+export const verifyBrandingPayment = async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    } = req.body
 
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: "Invalid branding payment payload" })
+    }
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex")
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: "Branding payment verification failed" })
+    }
+
+    return res.status(200).json({
+      message: "Branding unlocked successfully",
+      brandingUnlocked: true
+    })
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Branding payment verification failed" })
   }
+}
 
-   res.json({ received: true });
+export const verifyCreditsPayment = async (req, res) => {
+  try {
+    const userId = req.userId
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      amount: rawAmount
+    } = req.body
+
+    const amount = Number(rawAmount)
+    const credits = CREDIT_MAP[amount]
+    if (!credits || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: "Invalid payment payload" })
+    }
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex")
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: "Payment verification failed" })
+    }
+
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        $inc: { credits },
+        $set: { isCreditAvailable: true }
+      },
+      { new: true }
+    )
+
+    return res.status(200).json({
+      message: "Credits added successfully",
+      credits: user?.credits
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Payment verification failed" })
+  }
 }

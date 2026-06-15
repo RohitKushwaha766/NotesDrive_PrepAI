@@ -3,7 +3,7 @@ import Notes from "../models/notes.model.js"
 
 export const getMyNotes = async (req, res) => {
     try {
-        const notes = await Notes.find({ user: req.userId }).select("topic classLevel examType revisionMode includeDiagram includeChart createdAt").sort({ createdAt: -1 })
+        const notes = await Notes.find({ user: req.userId }).select("topic classLevel examType revisionMode includeDiagram includeChart generatorMode createdAt").sort({ createdAt: -1 })
         if (!notes) {
             return res.status(404).json({
                 error: "Notes not found"

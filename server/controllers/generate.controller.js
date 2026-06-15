@@ -11,7 +11,14 @@ export const generateNotes = async (req, res) => {
             examType,
             revisionMode = false,
             includeDiagram = false,
-            includeChart = false
+            includeChart = false,
+            generatorMode = "notes",
+            questionTypes = ["short", "long", "mcq"],
+            questionCount = 5,
+            difficulty = "mixed",
+            enableBranding = false,
+            instituteName = "",
+            customWatermark = ""
         } = req.body;
         if (!topic) {
             return res.status(400).json({ message: "Topic is required" })
@@ -35,11 +42,21 @@ export const generateNotes = async (req, res) => {
             examType,
             revisionMode,
             includeDiagram,
-            includeChart
+            includeChart,
+            generatorMode,
+            questionTypes,
+            questionCount,
+            difficulty
         })
 
 
         const aiResponse = await generateGeminiResponse(prompt)
+        aiResponse.mode = generatorMode === "questions" ? "questions" : "notes"
+        aiResponse.branding = {
+            enabled: Boolean(enableBranding),
+            instituteName: enableBranding ? instituteName : "",
+            watermark: enableBranding ? customWatermark : ""
+        }
    
 
         const notes = await Notes.create({
@@ -50,6 +67,13 @@ export const generateNotes = async (req, res) => {
             revisionMode,
             includeDiagram,
             includeChart,
+            generatorMode,
+            questionTypes,
+            questionCount,
+            difficulty,
+            enableBranding,
+            instituteName: enableBranding ? instituteName : "",
+            customWatermark: enableBranding ? customWatermark : "",
             content: aiResponse
 
 

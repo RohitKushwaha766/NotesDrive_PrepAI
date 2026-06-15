@@ -21,6 +21,20 @@ const notesSchema = new mongoose.Schema({
 
     includeDiagram: Boolean,
     includeChart: Boolean,
+    generatorMode: {
+      type: String,
+      enum: ["notes", "questions"],
+      default: "notes"
+    },
+    questionTypes: [String],
+    questionCount: Number,
+    difficulty: String,
+    enableBranding: {
+      type: Boolean,
+      default: false
+    },
+    instituteName: String,
+    customWatermark: String,
 
     content: {
       type: mongoose.Schema.Types.Mixed, // AI response (string / JSON)
