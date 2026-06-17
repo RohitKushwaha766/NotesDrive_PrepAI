@@ -4,13 +4,42 @@ import UserModel from "../models/user.model.js"
 
 dotenv.config()
 
-const CREDIT_MAP = {
-  50: 200,
-  100: 450,
-  200: 1000
-}
+const DEFAULT_CREDIT_PLANS = [
+  { amount: 50, credits: 200, title: "Starter", description: "Perfect for quick revisions" },
+  { amount: 100, credits: 450, title: "Popular", description: "Best value for students", popular: true },
+  { amount: 200, credits: 1000, title: "Pro Learner", description: "For serious exam preparation" }
+]
 
 const BRANDING_AMOUNT = 10
+
+const creditPlans = () => {
+  if (!process.env.PREPAI_CREDIT_PLANS) {
+    return DEFAULT_CREDIT_PLANS
+  }
+
+  try {
+    const parsed = JSON.parse(process.env.PREPAI_CREDIT_PLANS)
+    if (!Array.isArray(parsed)) {
+      return DEFAULT_CREDIT_PLANS
+    }
+
+    const plans = parsed
+      .map((plan) => ({
+        amount: Number(plan.amount),
+        credits: Number(plan.credits),
+        title: String(plan.title || `${plan.credits || ""} Credits`).trim(),
+        description: String(plan.description || "PrepAI credit pack").trim(),
+        popular: Boolean(plan.popular)
+      }))
+      .filter((plan) => plan.amount > 0 && plan.credits > 0)
+
+    return plans.length ? plans : DEFAULT_CREDIT_PLANS
+  } catch {
+    return DEFAULT_CREDIT_PLANS
+  }
+}
+
+const creditsForAmount = (amount) => creditPlans().find((plan) => plan.amount === amount)?.credits
 
 const razorpayAuth = () => {
   const keyId = process.env.RAZORPAY_KEY_ID
@@ -24,11 +53,15 @@ const razorpayAuth = () => {
   }
 }
 
+export const getCreditPlans = async (_req, res) => {
+  return res.status(200).json({ plans: creditPlans() })
+}
+
 export const createCreditsOrder = async (req, res) => {
   try {
     const userId = req.userId
     const amount = Number(req.body.amount)
-    const credits = CREDIT_MAP[amount]
+    const credits = creditsForAmount(amount)
 
     if (!credits) {
       return res.status(400).json({ message: "Invalid credit plan" })
@@ -159,7 +192,7 @@ export const verifyCreditsPayment = async (req, res) => {
     } = req.body
 
     const amount = Number(rawAmount)
-    const credits = CREDIT_MAP[amount]
+    const credits = creditsForAmount(amount)
     if (!credits || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ message: "Invalid payment payload" })
     }
