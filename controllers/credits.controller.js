@@ -12,16 +12,34 @@ const DEFAULT_CREDIT_PLANS = [
 
 const BRANDING_AMOUNT = 10
 
-const creditPlans = () => {
+const normalizeEnvJson = (value) => {
+  const trimmed = String(value || "").trim()
+  if (!trimmed) return ""
+
+  const withoutAssignment = trimmed.includes("=") && trimmed.split("=")[0]?.includes("CREDIT_PLANS")
+    ? trimmed.slice(trimmed.indexOf("=") + 1).trim()
+    : trimmed
+
+  if (
+    (withoutAssignment.startsWith("'") && withoutAssignment.endsWith("'")) ||
+    (withoutAssignment.startsWith('"') && withoutAssignment.endsWith('"'))
+  ) {
+    return withoutAssignment.slice(1, -1).trim()
+  }
+
+  return withoutAssignment
+}
+
+const parseCreditPlans = () => {
   const rawPlans = process.env.PREPAI_CREDIT_PLANS || process.env.CREDIT_PLANS
   if (!rawPlans) {
-    return DEFAULT_CREDIT_PLANS
+    return { error: "", plans: DEFAULT_CREDIT_PLANS, source: "default" }
   }
 
   try {
-    const parsed = JSON.parse(rawPlans)
+    const parsed = JSON.parse(normalizeEnvJson(rawPlans))
     if (!Array.isArray(parsed)) {
-      return DEFAULT_CREDIT_PLANS
+      return { error: "Env value is not a JSON array.", plans: DEFAULT_CREDIT_PLANS, source: "default" }
     }
 
     const plans = parsed
@@ -34,13 +52,16 @@ const creditPlans = () => {
       }))
       .filter((plan) => plan.amount > 0 && plan.credits > 0)
 
-    return plans.length ? plans : DEFAULT_CREDIT_PLANS
+    return plans.length
+      ? { error: "", plans, source: "env" }
+      : { error: "No valid plans found in env JSON.", plans: DEFAULT_CREDIT_PLANS, source: "default" }
   } catch (error) {
     console.warn("Invalid PREPAI_CREDIT_PLANS/CREDIT_PLANS JSON. Using default credit plans.", error?.message)
-    return DEFAULT_CREDIT_PLANS
+    return { error: error?.message || "Invalid JSON", plans: DEFAULT_CREDIT_PLANS, source: "default" }
   }
 }
 
+const creditPlans = () => parseCreditPlans().plans
 const creditsForAmount = (amount) => creditPlans().find((plan) => plan.amount === amount)?.credits
 
 const razorpayAuth = () => {
@@ -56,7 +77,25 @@ const razorpayAuth = () => {
 }
 
 export const getCreditPlans = async (_req, res) => {
-  return res.status(200).json({ plans: creditPlans() })
+  const parsed = parseCreditPlans()
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+  return res.status(200).json({ plans: parsed.plans, source: parsed.source })
+}
+
+export const debugCreditPlans = async (_req, res) => {
+  const parsed = parseCreditPlans()
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+  return res.status(200).json({
+    env: {
+      creditPlansLength: process.env.CREDIT_PLANS ? process.env.CREDIT_PLANS.length : 0,
+      hasCreditPlans: Boolean(process.env.CREDIT_PLANS),
+      hasPrepAICreditPlans: Boolean(process.env.PREPAI_CREDIT_PLANS),
+      prepAICreditPlansLength: process.env.PREPAI_CREDIT_PLANS ? process.env.PREPAI_CREDIT_PLANS.length : 0
+    },
+    error: parsed.error,
+    planCount: parsed.plans.length,
+    source: parsed.source
+  })
 }
 
 export const createCreditsOrder = async (req, res) => {
