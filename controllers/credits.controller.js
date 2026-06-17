@@ -30,6 +30,18 @@ const normalizeEnvJson = (value) => {
   return withoutAssignment
 }
 
+const parseJsonMaybeEscaped = (value) => {
+  try {
+    return JSON.parse(value)
+  } catch (firstError) {
+    const unescaped = value.replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+    if (unescaped !== value) {
+      return JSON.parse(unescaped)
+    }
+    throw firstError
+  }
+}
+
 const parseCreditPlans = () => {
   const rawPlans = process.env.PREPAI_CREDIT_PLANS || process.env.CREDIT_PLANS
   if (!rawPlans) {
@@ -37,7 +49,7 @@ const parseCreditPlans = () => {
   }
 
   try {
-    const parsed = JSON.parse(normalizeEnvJson(rawPlans))
+    const parsed = parseJsonMaybeEscaped(normalizeEnvJson(rawPlans))
     if (!Array.isArray(parsed)) {
       return { error: "Env value is not a JSON array.", plans: DEFAULT_CREDIT_PLANS, source: "default" }
     }
