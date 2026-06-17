@@ -34,7 +34,9 @@ const parseJsonMaybeEscaped = (value) => {
   try {
     return JSON.parse(value)
   } catch (firstError) {
-    const unescaped = value.replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+    const unescaped = value
+      .replace(/\\(["{}\[\],:])/g, "$1")
+      .replace(/\\\\/g, "\\")
     if (unescaped !== value) {
       return JSON.parse(unescaped)
     }
