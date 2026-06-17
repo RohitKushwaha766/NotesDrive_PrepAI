@@ -13,12 +13,13 @@ const DEFAULT_CREDIT_PLANS = [
 const BRANDING_AMOUNT = 10
 
 const creditPlans = () => {
-  if (!process.env.PREPAI_CREDIT_PLANS) {
+  const rawPlans = process.env.PREPAI_CREDIT_PLANS || process.env.CREDIT_PLANS
+  if (!rawPlans) {
     return DEFAULT_CREDIT_PLANS
   }
 
   try {
-    const parsed = JSON.parse(process.env.PREPAI_CREDIT_PLANS)
+    const parsed = JSON.parse(rawPlans)
     if (!Array.isArray(parsed)) {
       return DEFAULT_CREDIT_PLANS
     }
@@ -34,7 +35,8 @@ const creditPlans = () => {
       .filter((plan) => plan.amount > 0 && plan.credits > 0)
 
     return plans.length ? plans : DEFAULT_CREDIT_PLANS
-  } catch {
+  } catch (error) {
+    console.warn("Invalid PREPAI_CREDIT_PLANS/CREDIT_PLANS JSON. Using default credit plans.", error?.message)
     return DEFAULT_CREDIT_PLANS
   }
 }
