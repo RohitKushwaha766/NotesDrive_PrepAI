@@ -61,7 +61,7 @@ const parseCreditPlans = () => {
         amount: Number(plan.amount),
         credits: Number(plan.credits),
         title: String(plan.title || `${plan.credits || ""} Credits`).trim(),
-        description: String(plan.description || "PrepAI credit pack").trim(),
+        description: String(plan.description || "Notes Drive AI credit pack").trim(),
         popular: Boolean(plan.popular)
       }))
       .filter((plan) => plan.amount > 0 && plan.credits > 0)

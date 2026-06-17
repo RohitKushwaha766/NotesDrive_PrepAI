@@ -20,7 +20,8 @@ const defaultAllowedOrigins = [
     "http://127.0.0.1:5173",
     "https://notesdrive.com",
     "https://www.notesdrive.com",
-    "https://prepai.notesdrive.com"
+    "https://prepai.notesdrive.com",
+    "https://ai.notesdrive.com"
 ]
 
 const envAllowedOrigins = [
