@@ -2,6 +2,7 @@ import crypto from "crypto"
 import dotenv from "dotenv"
 import mongoose from "mongoose"
 import AdRewardTransactionModel from "../models/adRewardTransaction.model.js"
+import FreeDownloadUnlockModel from "../models/freeDownloadUnlock.model.js"
 import UserModel from "../models/user.model.js"
 
 dotenv.config()
@@ -97,6 +98,72 @@ const verifyAdMobSsvSignature = async (req) => {
   if (!valid) {
     throw new Error("Invalid AdMob SSV signature")
   }
+}
+
+const parseAdMobCustomData = (value) => {
+  if (!value) return {}
+
+  try {
+    return JSON.parse(String(value))
+  } catch {
+    return {}
+  }
+}
+
+const handleFreeDownloadSsvReward = async (req, res, customData) => {
+  const {
+    ad_network,
+    ad_unit,
+    timestamp,
+    transaction_id,
+    user_id
+  } = req.query
+
+  if (!transaction_id) {
+    return res.status(200).json({
+      message: "Missing transaction_id. Callback verified but download was not unlocked.",
+      unlocked: false
+    })
+  }
+
+  const sessionId = String(customData.sessionId || user_id || "")
+  const productId = Number(customData.productId || 0)
+  const downloadId = String(customData.downloadId || "")
+
+  if (!sessionId || !productId || !downloadId) {
+    return res.status(200).json({
+      message: "Missing free download unlock data. Callback verified but download was not unlocked.",
+      unlocked: false
+    })
+  }
+
+  const rewardTime = Number(timestamp || 0)
+  if (rewardTime && Math.abs(Date.now() - rewardTime) > ADMOB_SSV_MAX_AGE_MS) {
+    return res.status(400).json({ message: "AdMob SSV callback is too old", unlocked: false })
+  }
+
+  const existing = await FreeDownloadUnlockModel.findOne({ transactionId: String(transaction_id) })
+  if (existing) {
+    return res.status(200).json({
+      message: "Free download unlock transaction already processed",
+      unlocked: false
+    })
+  }
+
+  await FreeDownloadUnlockModel.create({
+    adNetwork: String(ad_network || ""),
+    adUnit: String(ad_unit || ""),
+    downloadId,
+    productId,
+    sessionId,
+    timestamp: String(timestamp || ""),
+    transactionId: String(transaction_id)
+  })
+
+  return res.status(200).json({
+    message: "Free download unlocked successfully.",
+    unlocked: true
+  })
 }
 
 const normalizeEnvJson = (value) => {
@@ -420,6 +487,30 @@ export const claimRewardedAdCredits = async (req, res) => {
   }
 }
 
+export const checkFreeDownloadUnlock = async (req, res) => {
+  try {
+    const sessionId = String(req.query.session_id || "")
+    const productId = Number(req.query.product_id || 0)
+    const downloadId = String(req.query.download_id || "")
+
+    if (!sessionId || !productId || !downloadId) {
+      return res.status(400).json({ message: "Missing unlock status parameters", unlocked: false })
+    }
+
+    const unlock = await FreeDownloadUnlockModel.findOne({
+      downloadId,
+      productId,
+      sessionId
+    })
+
+    return res.status(200).json({
+      unlocked: Boolean(unlock)
+    })
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Could not check unlock status", unlocked: false })
+  }
+}
+
 export const handleAdMobSsvReward = async (req, res) => {
   try {
     await verifyAdMobSsvSignature(req)
@@ -434,6 +525,11 @@ export const handleAdMobSsvReward = async (req, res) => {
       transaction_id,
       user_id
     } = req.query
+
+    const customData = parseAdMobCustomData(custom_data)
+    if (customData.placement === "free_download") {
+      return handleFreeDownloadSsvReward(req, res, customData)
+    }
 
     if (!transaction_id) {
       return res.status(200).json({

@@ -4,6 +4,7 @@ import {
   createBrandingOrder,
   createCreditsOrder,
   claimRewardedAdCredits,
+  checkFreeDownloadUnlock,
   debugCreditPlans,
   getCreditPlans,
   handleAdMobSsvReward,
@@ -21,6 +22,7 @@ creditRouter.post("/order" , isAuth ,createCreditsOrder )
 creditRouter.post("/verify" , isAuth ,verifyCreditsPayment )
 creditRouter.post("/reward-ad" , isAuth ,claimRewardedAdCredits )
 creditRouter.get("/admob-ssv" , handleAdMobSsvReward )
+creditRouter.get("/free-download-unlock" , checkFreeDownloadUnlock )
 creditRouter.post("/branding/order" , isAuth ,createBrandingOrder )
 creditRouter.post("/branding/verify" , isAuth ,verifyBrandingPayment )
 
