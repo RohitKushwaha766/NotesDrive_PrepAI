@@ -435,12 +435,25 @@ export const handleAdMobSsvReward = async (req, res) => {
       user_id
     } = req.query
 
-    if (!transaction_id || !user_id) {
-      return res.status(400).json({ message: "Missing transaction_id or user_id" })
+    if (!transaction_id) {
+      return res.status(200).json({
+        message: "Missing transaction_id. Callback verified but reward was not credited.",
+        credited: false
+      })
+    }
+
+    if (!user_id) {
+      return res.status(200).json({
+        message: "Missing user_id. Callback verified but reward was not credited.",
+        credited: false
+      })
     }
 
     if (!mongoose.Types.ObjectId.isValid(String(user_id))) {
-      return res.status(400).json({ message: "Invalid user_id" })
+      return res.status(200).json({
+        message: "Invalid user_id. Callback verified but reward was not credited.",
+        credited: false
+      })
     }
 
     const rewardTime = Number(timestamp || 0)
@@ -450,7 +463,10 @@ export const handleAdMobSsvReward = async (req, res) => {
 
     const user = await UserModel.findById(String(user_id))
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(200).json({
+        message: "User not found. Callback verified but reward was not credited.",
+        credited: false
+      })
     }
 
     const today = new Date().toISOString().slice(0, 10)
