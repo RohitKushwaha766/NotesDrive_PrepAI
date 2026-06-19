@@ -11,7 +11,7 @@ const DEFAULT_CREDIT_PLANS = [
 ]
 
 const BRANDING_AMOUNT = 10
-const REWARDED_AD_CREDITS = Number(process.env.REWARDED_AD_CREDITS || 3)
+const REWARDED_AD_CREDITS = Number(process.env.REWARDED_AD_CREDITS || 5)
 const REWARDED_AD_DAILY_LIMIT = Number(process.env.REWARDED_AD_DAILY_LIMIT || 3)
 
 const normalizeEnvJson = (value) => {
