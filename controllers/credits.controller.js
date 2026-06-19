@@ -11,6 +11,8 @@ const DEFAULT_CREDIT_PLANS = [
 ]
 
 const BRANDING_AMOUNT = 10
+const REWARDED_AD_CREDITS = Number(process.env.REWARDED_AD_CREDITS || 3)
+const REWARDED_AD_DAILY_LIMIT = Number(process.env.REWARDED_AD_DAILY_LIMIT || 3)
 
 const normalizeEnvJson = (value) => {
   const trimmed = String(value || "").trim()
@@ -276,5 +278,48 @@ export const verifyCreditsPayment = async (req, res) => {
     })
   } catch (error) {
     res.status(500).json({ message: error.message || "Payment verification failed" })
+  }
+}
+
+export const claimRewardedAdCredits = async (req, res) => {
+  try {
+    const userId = req.userId
+    const today = new Date().toISOString().slice(0, 10)
+    const user = await UserModel.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    const rewardMeta = user.rewardedAdCredits || {}
+    const usedToday = rewardMeta.date === today ? Number(rewardMeta.count || 0) : 0
+
+    if (usedToday >= REWARDED_AD_DAILY_LIMIT) {
+      return res.status(429).json({
+        message: "Daily rewarded ad limit reached. Please try again tomorrow.",
+        credits: user.credits,
+        rewardedCredits: 0,
+        rewardsUsedToday: usedToday,
+        rewardsLimit: REWARDED_AD_DAILY_LIMIT
+      })
+    }
+
+    user.credits = Number(user.credits || 0) + REWARDED_AD_CREDITS
+    user.isCreditAvailable = true
+    user.rewardedAdCredits = {
+      date: today,
+      count: usedToday + 1
+    }
+    await user.save()
+
+    return res.status(200).json({
+      message: `${REWARDED_AD_CREDITS} credits added successfully.`,
+      credits: user.credits,
+      rewardedCredits: REWARDED_AD_CREDITS,
+      rewardsUsedToday: usedToday + 1,
+      rewardsLimit: REWARDED_AD_DAILY_LIMIT
+    })
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Reward credits failed" })
   }
 }

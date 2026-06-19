@@ -19,6 +19,16 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         default:true
     },
+    rewardedAdCredits:{
+        date:{
+            type:String,
+            default:""
+        },
+        count:{
+            type:Number,
+            default:0
+        }
+    },
     notes:{
         type:[mongoose.Schema.Types.ObjectId],
         ref:"Notes",
