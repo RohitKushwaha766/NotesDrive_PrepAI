@@ -6,6 +6,7 @@ import {
   claimRewardedAdCredits,
   debugCreditPlans,
   getCreditPlans,
+  handleAdMobSsvReward,
   verifyBrandingPayment,
   verifyCreditsPayment
 } from "../controllers/credits.controller.js"
@@ -19,6 +20,7 @@ creditRouter.get("/plans/debug" , debugCreditPlans )
 creditRouter.post("/order" , isAuth ,createCreditsOrder )
 creditRouter.post("/verify" , isAuth ,verifyCreditsPayment )
 creditRouter.post("/reward-ad" , isAuth ,claimRewardedAdCredits )
+creditRouter.get("/admob-ssv" , handleAdMobSsvReward )
 creditRouter.post("/branding/order" , isAuth ,createBrandingOrder )
 creditRouter.post("/branding/verify" , isAuth ,verifyBrandingPayment )
 
