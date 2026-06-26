@@ -2,10 +2,28 @@
 const Gemini_URL = 
 "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent"
 
-export const generateGeminiResponse = async (prompt) => {
+function geminiKeys() {
+  return [
+    { key: process.env.GEMINI_FREE_API_KEY || process.env.GEMINI_API_KEY, label: "free" },
+    { key: process.env.GEMINI_PAID_API_KEY, label: "paid" }
+  ].filter((item, index, items) => item.key && items.findIndex((next) => next.key === item.key) === index);
+}
 
-    try {
-         const response = await fetch(`${Gemini_URL}?key=${process.env.GEMINI_API_KEY}`,{
+function shouldFallback(error) {
+  const message = error?.message || "";
+  const status = error?.status || 0;
+  return (
+    status === 429 ||
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504 ||
+    /quota|rate|overload|busy|timeout|unavailable/i.test(message)
+  );
+}
+
+async function callGemini(prompt, apiKey, label) {
+  const response = await fetch(`${Gemini_URL}?key=${apiKey}`, {
         method:"POST",
         headers: {
           "Content-Type": "application/json"
@@ -26,7 +44,9 @@ export const generateGeminiResponse = async (prompt) => {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(err);
+      const error = new Error(err || `Gemini ${label} key failed with ${response.status}`);
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json()
@@ -43,13 +63,32 @@ export const generateGeminiResponse = async (prompt) => {
       .replace(/```/g, "")
       .trim();
 
-      return JSON.parse(cleanText);
+    return JSON.parse(cleanText);
+}
 
+export const generateGeminiResponse = async (prompt) => {
+    const keys = geminiKeys();
 
-
-    } catch (error) {
-        console.error("Gemini Fetch Error:", error.message);
-    throw new Error("Server is busy, please try again");
+    if (!keys.length) {
+      throw new Error("Gemini API key is not configured");
     }
+
+    let lastError = null;
+
+    for (let index = 0; index < keys.length; index++) {
+      const item = keys[index];
+      try {
+        return await callGemini(prompt, item.key, item.label);
+      } catch (error) {
+        lastError = error;
+        console.error(`Gemini ${item.label} key error:`, error.message);
+        if (index === keys.length - 1 || !shouldFallback(error)) {
+          break;
+        }
+        console.warn("Retrying Gemini request with fallback key...");
+      }
+    }
+
+    throw new Error(lastError?.message || "Server is busy, please try again");
    
 }
