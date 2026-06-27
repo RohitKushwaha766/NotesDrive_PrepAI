@@ -35,11 +35,11 @@ Create content like colorful handwritten short notes pages:
 - White page feel
 - Big chapter/topic heading
 - Pastel highlighter headings
-- Short direct paragraphs
+- Short direct paragraphs in very easy student-friendly language
 - Bullet points
 - Formula/equation strips when relevant
 - Small labeled flow/table/comparison blocks when useful
-- Add simple labeled diagrams only when the concept genuinely needs a visual.
+- Add structured Mermaid/SVG-style diagrams only when the concept genuinely needs a visual.
 - For geometry, mensuration, trigonometry, maps, geography, biology structures, physics circuits, apparatus, or flow processes, diagrams are REQUIRED.
 - No real images
 - No chart sections
@@ -49,6 +49,11 @@ Create content like colorful handwritten short notes pages:
 NOTES MODE RULES:
 - Create ONLY notes, not Q&A.
 - Notes must be detailed, exam-useful, and still look like class/college/competition preparation handwritten notes.
+- Use very easy language that an average student can understand quickly.
+- Explain difficult terms in simple words before using them deeply.
+- Prefer short sentences. Avoid unnecessarily advanced vocabulary.
+- If English is used, keep it simple school-level English.
+- If Hindi context is requested, use simple Hindi/Hinglish-style explanation without making it too formal.
 - Cover the topic deeply: definitions, concepts, laws/rules, formulas, reactions, examples, exceptions, applications, mistakes, and exam tips as relevant.
 - Keep content dense but readable; do not make it too short unless Revision Mode is ON.
 - Never return an empty page.
@@ -58,9 +63,13 @@ NOTES MODE RULES:
 - For school topics, prefer NCERT/CBSE-style explanation.
 - For competition topics, include exam keywords and quick facts.
 - For college topics, use stronger conceptual depth but keep the short-notes layout.
-- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, or hierarchy is important, include a "diagram" block with labels in "items".
+- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, or hierarchy is important, include a "diagram" block with labels in "items" plus "nodes" and "edges".
 - If the topic is triangles, circles, coordinate geometry, surface areas, volumes, maps or directions, include at least one "diagram" block.
 - For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", or "map".
+- For diagrams, prefer structured SVG/Mermaid-style data instead of explaining a diagram in bullet points.
+- Use "diagramType" to help the app render the visual: "flowchart", "cycle", "hierarchy", "comparison", "timeline", "process", "circuit", "geometry", "apparatus", "structure", or "map".
+- Use "nodes" as short labels and "edges" as relationships. Example: nodes ["Battery", "Switch", "Bulb"], edges [["Battery","Switch"],["Switch","Bulb"],["Bulb","Battery"]].
+- Do not write a diagram block where the "items" only say "Diagram", "Label 1", "Label 2", etc. The diagram must have meaningful nodes/edges.
 - If Revision Mode is ON, make notes moderately shorter and more bullet-focused.
 - Use 4 to 8 page objects depending on topic size.
 - Each page should have 7 to 12 blocks.
@@ -81,7 +90,7 @@ ALLOWED NOTE BLOCK TYPES:
 - "formula": equation/reaction/formula strip
 - "table": comparison/fact table
 - "flow": process/sequence steps
-- "diagram": simple labeled concept/process diagram; use "items" for labels and "text" for a short caption
+- "diagram": structured SVG/Mermaid-style concept/process diagram; use "items" for labels, "nodes" for visual nodes, "edges" for links, "diagramType" for visual style, and "text" for a short caption
 - "note": warning, remember, or exam tip
 - "example": examples list
 
@@ -112,8 +121,11 @@ STRICT JSON FORMAT:
             "items": ["string"],
             "columns": ["string"],
             "rows": [["string"]],
-            "steps": ["string"]
-            "shape": "triangle | circle | solid | map | concept"
+            "steps": ["string"],
+            "shape": "triangle | circle | solid | map | concept",
+            "diagramType": "flowchart | cycle | hierarchy | comparison | timeline | process | circuit | geometry | apparatus | structure | map",
+            "nodes": ["string"],
+            "edges": [["string", "string"]]
           }
         ]
       }
