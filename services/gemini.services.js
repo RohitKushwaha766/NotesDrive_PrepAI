@@ -63,7 +63,20 @@ async function callGemini(prompt, apiKey, label) {
       .replace(/```/g, "")
       .trim();
 
-    return JSON.parse(cleanText);
+    return parseGeminiJson(cleanText);
+}
+
+function parseGeminiJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.search(/[{\[]/);
+    const end = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+    if (start >= 0 && end > start) {
+      return JSON.parse(text.slice(start, end + 1));
+    }
+    throw new Error("Gemini returned invalid JSON");
+  }
 }
 
 export const generateGeminiResponse = async (prompt) => {

@@ -39,8 +39,9 @@ Create content like colorful handwritten short notes pages:
 - Bullet points
 - Formula/equation strips when relevant
 - Small labeled flow/table/comparison blocks when useful
-- Add structured Mermaid/SVG-style diagrams only when the concept genuinely needs a visual.
-- For geometry, mensuration, trigonometry, maps, geography, biology structures, physics circuits, apparatus, or flow processes, diagrams are REQUIRED.
+- Avoid generic box-and-line diagrams because students may not understand them.
+- Use diagram blocks only for very simple geometry shapes or very clear process/cycle visuals.
+- For biology structures, physics circuits, apparatus, and complex systems, prefer tables, flows, formulas, and labelled key points unless a real template diagram is available.
 - No real images
 - No chart sections
 - No separate "important questions" inside notes mode
@@ -63,13 +64,12 @@ NOTES MODE RULES:
 - For school topics, prefer NCERT/CBSE-style explanation.
 - For competition topics, include exam keywords and quick facts.
 - For college topics, use stronger conceptual depth but keep the short-notes layout.
-- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, or hierarchy is important, include a "diagram" block with labels in "items" plus "nodes" and "edges".
-- If the topic is triangles, circles, coordinate geometry, surface areas, volumes, maps or directions, include at least one "diagram" block.
+- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, or hierarchy is important, use a "flow" block or "table" block first.
+- Use a "diagram" block only when the visual can be drawn clearly with simple shapes, such as triangle, circle, cycle, or map.
+- If the topic is triangles, circles, coordinate geometry, surface areas, volumes, maps or directions, include at least one simple "diagram" block.
 - For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", or "map".
-- For diagrams, prefer structured SVG/Mermaid-style data instead of explaining a diagram in bullet points.
-- Use "diagramType" to help the app render the visual: "flowchart", "cycle", "hierarchy", "comparison", "timeline", "process", "circuit", "geometry", "apparatus", "structure", or "map".
-- Use "nodes" as short labels and "edges" as relationships. Example: nodes ["Battery", "Switch", "Bulb"], edges [["Battery","Switch"],["Switch","Bulb"],["Bulb","Battery"]].
-- Do not write a diagram block where the "items" only say "Diagram", "Label 1", "Label 2", etc. The diagram must have meaningful nodes/edges.
+- Do not create abstract node-and-edge diagrams for human heart, blood circulation, bridge circuits, cells, organs, or apparatus. Use a table or flow instead.
+- Do not write a diagram block where the "items" only say "Diagram", "Label 1", "Label 2", etc. The diagram must be genuinely useful.
 - If Revision Mode is ON, make notes moderately shorter and more bullet-focused.
 - Use 4 to 8 page objects depending on topic size.
 - Each page should have 7 to 12 blocks.
@@ -90,7 +90,7 @@ ALLOWED NOTE BLOCK TYPES:
 - "formula": equation/reaction/formula strip
 - "table": comparison/fact table
 - "flow": process/sequence steps
-- "diagram": structured SVG/Mermaid-style concept/process diagram; use "items" for labels, "nodes" for visual nodes, "edges" for links, "diagramType" for visual style, and "text" for a short caption
+- "diagram": simple clear geometry/map/cycle diagram only; use "items" for labels, "shape" for supported shape, and "text" for a short caption
 - "note": warning, remember, or exam tip
 - "example": examples list
 
