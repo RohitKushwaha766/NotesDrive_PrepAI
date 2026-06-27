@@ -55,12 +55,16 @@ NOTES MODE RULES:
 - Prefer short sentences. Avoid unnecessarily advanced vocabulary.
 - If English is used, keep it simple school-level English.
 - If Hindi context is requested, use simple Hindi/Hinglish-style explanation without making it too formal.
+- Keep paragraphs compact. Do not make every sentence oversized or poster-like.
+- Prefer more useful points per page instead of very large text with empty space.
+- Avoid writing full sections in uppercase. Use title case for headings and normal case for explanations.
 - Cover the topic deeply: definitions, concepts, laws/rules, formulas, reactions, examples, exceptions, applications, mistakes, and exam tips as relevant.
 - Keep content dense but readable; do not make it too short unless Revision Mode is ON.
 - Never return an empty page.
 - Every page must contain a non-empty "blocks" array.
 - Every block must contain useful text in "text", "items", "steps", or "rows".
 - Use formulas, reactions, definitions, examples, differences, properties, uses, precautions, tricks, and memory points as relevant.
+- For formulas, use clean notation and then explain symbols in a short separate line.
 - For school topics, prefer NCERT/CBSE-style explanation.
 - For competition topics, include exam keywords and quick facts.
 - For college topics, use stronger conceptual depth but keep the short-notes layout.
