@@ -39,10 +39,13 @@ Create content like colorful handwritten short notes pages:
 - Bullet points
 - Formula/equation strips when relevant
 - Small labeled flow/table/comparison blocks when useful
+- Use visual blocks wherever they genuinely help understanding.
+- For Mathematics, use SVG-shape friendly diagram blocks: coordinate axes, number line, geometry figures, circle, triangle, Venn diagram, graph, matrix grid, bar chart, or formula layout.
+- For Physics/Chemistry/Biology, use simple SVG-shape friendly diagrams only when they are visually meaningful: circuit, ray, apparatus, cycle, structure, flow, or labeled process.
+- For History, Geography, Civics, Political Science, Economics, and map/current-affairs style topics, prefer real-image reference blocks instead of abstract node diagrams. Use "visualStyle": "real-image" and add a very specific "imageQuery" such as "NCERT Class 10 nationalism in India map" or "Indian Parliament building educational image".
 - Avoid generic box-and-line diagrams because students may not understand them.
-- Use diagram blocks only for very simple geometry shapes or very clear process/cycle visuals.
-- For biology structures, physics circuits, apparatus, and complex systems, prefer tables, flows, formulas, and labelled key points unless a real template diagram is available.
-- No real images
+- Do not write fake labels like "Label 1" or "Diagram". A diagram must teach something directly.
+- Real image blocks are allowed through "imageUrl" when available, otherwise provide "imageQuery" and "caption" for the renderer/search service.
 - No chart sections
 - No separate "important questions" inside notes mode
 - No generic intro/summary filler
@@ -68,12 +71,12 @@ NOTES MODE RULES:
 - For school topics, prefer NCERT/CBSE-style explanation.
 - For competition topics, include exam keywords and quick facts.
 - For college topics, use stronger conceptual depth but keep the short-notes layout.
-- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, or hierarchy is important, use a "flow" block or "table" block first.
-- Use a "diagram" block only when the visual can be drawn clearly with simple shapes, such as triangle, circle, cycle, or map.
-- If the topic is triangles, circles, coordinate geometry, surface areas, volumes, maps or directions, include at least one simple "diagram" block.
-- For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", or "map".
-- Do not create abstract node-and-edge diagrams for human heart, blood circulation, bridge circuits, cells, organs, or apparatus. Use a table or flow instead.
-- Do not write a diagram block where the "items" only say "Diagram", "Label 1", "Label 2", etc. The diagram must be genuinely useful.
+- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, hierarchy, map, graph, or geometry concept is important, use a useful "diagram" block.
+- For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", "map", "axis", "graph", "numberLine", "venn", "matrix", "bar", or "timeline".
+- For mathematics formulas with powers, use ^ notation in JSON text (example: "I^2 x R x t"). The app will render the power visually.
+- For social-science topics, set "visualStyle": "real-image" and "diagramType": "historical-image | map | geography-photo | civics-photo | timeline". Add "imageQuery" and a short caption.
+- Use "nodes" and "edges" only when a relationship diagram is actually clear.
+- Do not create abstract node-and-edge diagrams for human heart, blood circulation, bridge circuits, cells, organs, or apparatus unless the labels and layout are clearly meaningful.
 - If Revision Mode is ON, make notes moderately shorter and more bullet-focused.
 - Use 4 to 8 page objects depending on topic size.
 - Each page should have 7 to 12 blocks.
@@ -94,7 +97,7 @@ ALLOWED NOTE BLOCK TYPES:
 - "formula": equation/reaction/formula strip
 - "table": comparison/fact table
 - "flow": process/sequence steps
-- "diagram": simple clear geometry/map/cycle diagram only; use "items" for labels, "shape" for supported shape, and "text" for a short caption
+- "diagram": useful visual block; use "shape", "diagramType", "visualStyle", "items", "nodes", "edges", "imageUrl", "imageQuery", and "caption" as needed
 - "note": warning, remember, or exam tip
 - "example": examples list
 
@@ -126,8 +129,12 @@ STRICT JSON FORMAT:
             "columns": ["string"],
             "rows": [["string"]],
             "steps": ["string"],
-            "shape": "triangle | circle | solid | map | concept",
-            "diagramType": "flowchart | cycle | hierarchy | comparison | timeline | process | circuit | geometry | apparatus | structure | map",
+            "shape": "triangle | circle | solid | map | concept | axis | graph | numberLine | venn | matrix | bar | timeline",
+            "diagramType": "flowchart | cycle | hierarchy | comparison | timeline | process | circuit | geometry | graph | numberLine | venn | matrix | apparatus | structure | map | historical-image | geography-photo | civics-photo",
+            "visualStyle": "svg-shapes | real-image",
+            "imageUrl": "string",
+            "imageQuery": "string",
+            "caption": "string",
             "nodes": ["string"],
             "edges": [["string", "string"]]
           }
@@ -164,3 +171,5 @@ If mode is "questions", keep notes.pages empty.
 RETURN ONLY VALID JSON.
 `
 }
+
+
