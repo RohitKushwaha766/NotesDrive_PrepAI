@@ -41,7 +41,7 @@ Create content like colorful handwritten short notes pages:
 - Small labeled flow/table/comparison blocks when useful
 - Use visual blocks wherever they genuinely help understanding.
 - For Mathematics, use SVG-shape friendly diagram blocks: coordinate axes, number line, geometry figures, circle, triangle, Venn diagram, graph, matrix grid, bar chart, or formula layout.
-- For Physics/Chemistry/Biology, use simple SVG-shape friendly diagrams only when they are visually meaningful: circuit, ray, apparatus, cycle, structure, flow, or labeled process.
+- For Physics/Chemistry/Biology, use simple SVG-shape friendly diagrams only when they are visually meaningful: circuit, ray, apparatus, cycle, heart schematic, structure, flow, or labeled process.
 - For History, Geography, Civics, Political Science, Economics, and map/current-affairs style topics, prefer real-image reference blocks instead of abstract node diagrams. Use "visualStyle": "real-image" and add a very specific "imageQuery" such as "NCERT Class 10 nationalism in India map" or "Indian Parliament building educational image".
 - Avoid generic box-and-line diagrams because students may not understand them.
 - Do not write fake labels like "Label 1" or "Diagram". A diagram must teach something directly.
@@ -72,11 +72,11 @@ NOTES MODE RULES:
 - For competition topics, include exam keywords and quick facts.
 - For college topics, use stronger conceptual depth but keep the short-notes layout.
 - If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, hierarchy, map, graph, or geometry concept is important, use a useful "diagram" block.
-- For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", "map", "axis", "graph", "numberLine", "venn", "matrix", "bar", or "timeline".
+- For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", "map", "axis", "graph", "numberLine", "venn", "matrix", "bar", "timeline", or "heart".
 - For mathematics formulas with powers, use ^ notation in JSON text (example: "I^2 x R x t"). The app will render the power visually.
 - For social-science topics, set "visualStyle": "real-image" and "diagramType": "historical-image | map | geography-photo | civics-photo | timeline". Add "imageQuery" and a short caption.
 - Use "nodes" and "edges" only when a relationship diagram is actually clear.
-- Do not create abstract node-and-edge diagrams for human heart, blood circulation, bridge circuits, cells, organs, or apparatus unless the labels and layout are clearly meaningful.
+- For human heart, blood circulation, cells, organs, apparatus, and bridge circuits, use a clear SVG-shape schematic with meaningful labels instead of abstract boxes. For heart topics, include a diagram block with "shape": "heart" and labels for right atrium, right ventricle, left atrium, left ventricle, lungs, and body.
 - If Revision Mode is ON, make notes moderately shorter and more bullet-focused.
 - Use 4 to 8 page objects depending on topic size.
 - Each page should have 7 to 12 blocks.
@@ -129,7 +129,7 @@ STRICT JSON FORMAT:
             "columns": ["string"],
             "rows": [["string"]],
             "steps": ["string"],
-            "shape": "triangle | circle | solid | map | concept | axis | graph | numberLine | venn | matrix | bar | timeline",
+            "shape": "triangle | circle | solid | map | concept | axis | graph | numberLine | venn | matrix | bar | timeline | heart",
             "diagramType": "flowchart | cycle | hierarchy | comparison | timeline | process | circuit | geometry | graph | numberLine | venn | matrix | apparatus | structure | map | historical-image | geography-photo | civics-photo",
             "visualStyle": "svg-shapes | real-image",
             "imageUrl": "string",
@@ -171,5 +171,6 @@ If mode is "questions", keep notes.pages empty.
 RETURN ONLY VALID JSON.
 `
 }
+
 
 
