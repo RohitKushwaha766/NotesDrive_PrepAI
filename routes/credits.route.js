@@ -7,17 +7,16 @@ import {
   checkFreeDownloadUnlock,
   debugCreditPlans,
   getCreditPlans,
+  getBrandingConfig,
   handleAdMobSsvReward,
   verifyBrandingPayment,
   verifyCreditsPayment
 } from "../controllers/credits.controller.js"
 
-
-
-
 const creditRouter = express.Router()
 creditRouter.get("/plans" , getCreditPlans )
 creditRouter.get("/plans/debug" , debugCreditPlans )
+creditRouter.get("/branding/config" , getBrandingConfig )
 creditRouter.post("/order" , isAuth ,createCreditsOrder )
 creditRouter.post("/verify" , isAuth ,verifyCreditsPayment )
 creditRouter.post("/reward-ad" , isAuth ,claimRewardedAdCredits )

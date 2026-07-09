@@ -13,12 +13,24 @@ const DEFAULT_CREDIT_PLANS = [
   { amount: 200, credits: 1000, title: "Pro Learner", description: "For serious exam preparation" }
 ]
 
-const BRANDING_AMOUNT = 10
+const DEFAULT_BRANDING_AMOUNT = 5
 const REWARDED_AD_CREDITS = Number(process.env.REWARDED_AD_CREDITS || 5)
 const REWARDED_AD_DAILY_LIMIT = Number(process.env.REWARDED_AD_DAILY_LIMIT || 3)
 const ADMOB_SSV_KEYS_URL = "https://www.gstatic.com/admob/reward/verifier-keys.json"
 const ADMOB_SSV_MAX_AGE_MS = Number(process.env.ADMOB_SSV_MAX_AGE_MS || 24 * 60 * 60 * 1000)
 const REQUIRE_ADMOB_SSV = String(process.env.REQUIRE_ADMOB_SSV || "false").toLowerCase() === "true"
+const getBrandingAmount = () => {
+  const rawAmount = process.env.CUSTOM_BRANDING_AMOUNT || process.env.BRANDING_AMOUNT || DEFAULT_BRANDING_AMOUNT
+  const amount = Number(rawAmount)
+  return Number.isFinite(amount) && amount > 0 ? Math.round(amount) : DEFAULT_BRANDING_AMOUNT
+}
+
+export const getBrandingConfig = (req, res) => {
+  return res.status(200).json({
+    amount: getBrandingAmount(),
+    currency: "INR"
+  })
+}
 
 let admobKeyCache = {
   fetchedAt: 0,
@@ -331,7 +343,7 @@ export const createBrandingOrder = async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        amount: BRANDING_AMOUNT * 100,
+        amount: getBrandingAmount() * 100,
         currency: "INR",
         receipt,
         notes: {
