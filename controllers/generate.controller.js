@@ -2,6 +2,7 @@ import Notes from "../models/notes.model.js"
 import UserModel from "../models/user.model.js"
 import { generateGeminiResponse } from "../services/gemini.services.js"
 import { buildPrompt } from "../utils/promptBuilder.js"
+import { ensureVisualBlocks } from "../utils/visualBlocks.js"
 
 export const generateNotes = async (req, res) => {
     try {
@@ -50,7 +51,7 @@ export const generateNotes = async (req, res) => {
         })
 
 
-        const aiResponse = await generateGeminiResponse(prompt)
+        const aiResponse = ensureVisualBlocks(await generateGeminiResponse(prompt), { topic, classLevel, examType, generatorMode })
         aiResponse.mode = generatorMode === "questions" ? "questions" : "notes"
         aiResponse.branding = {
             enabled: Boolean(enableBranding),
@@ -109,3 +110,5 @@ export const generateNotes = async (req, res) => {
 
     }
 }
+
+
