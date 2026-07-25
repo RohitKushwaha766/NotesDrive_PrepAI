@@ -39,13 +39,10 @@ Create content like colorful handwritten short notes pages:
 - Bullet points
 - Formula/equation strips when relevant
 - Small labeled flow/table/comparison blocks when useful
-- Use visual blocks wherever they genuinely help understanding.
-- For Mathematics, use SVG-shape friendly diagram blocks: coordinate axes, number line, geometry figures, circle, triangle, Venn diagram, graph, matrix grid, bar chart, or formula layout.
-- For Physics/Chemistry/Biology, use simple SVG-shape friendly diagrams only when they are visually meaningful: circuit, ray, apparatus, cycle, heart schematic, structure, flow, or labeled process.
-- For History, Geography, Civics, Political Science, Economics, and map/current-affairs style topics, prefer real-image reference blocks instead of abstract node diagrams. Use "visualStyle": "real-image" and add a very specific "imageQuery" such as "NCERT Class 10 nationalism in India map" or "Indian Parliament building educational image".
 - Avoid generic box-and-line diagrams because students may not understand them.
-- Do not write fake labels like "Label 1" or "Diagram". A diagram must teach something directly.
-- Real image blocks are allowed through "imageUrl" when available, otherwise provide "imageQuery" and "caption" for the renderer/search service.
+- Use diagram blocks only for very simple geometry shapes or very clear process/cycle visuals.
+- For biology structures, physics circuits, apparatus, and complex systems, prefer tables, flows, formulas, and labelled key points unless a real template diagram is available.
+- No real images
 - No chart sections
 - No separate "important questions" inside notes mode
 - No generic intro/summary filler
@@ -71,12 +68,12 @@ NOTES MODE RULES:
 - For school topics, prefer NCERT/CBSE-style explanation.
 - For competition topics, include exam keywords and quick facts.
 - For college topics, use stronger conceptual depth but keep the short-notes layout.
-- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, hierarchy, map, graph, or geometry concept is important, use a useful "diagram" block.
-- For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", "map", "axis", "graph", "numberLine", "venn", "matrix", "bar", "timeline", or "heart".
-- For mathematics formulas with powers, use ^ notation in JSON text (example: "I^2 x R x t"). The app will render the power visually.
-- For social-science topics, set "visualStyle": "real-image" and "diagramType": "historical-image | map | geography-photo | civics-photo | timeline". Add "imageQuery" and a short caption.
-- Use "nodes" and "edges" only when a relationship diagram is actually clear.
-- For human heart, blood circulation, cells, organs, apparatus, and bridge circuits, use a clear SVG-shape schematic with meaningful labels instead of abstract boxes. For heart topics, include a diagram block with "shape": "heart" and labels for right atrium, right ventricle, left atrium, left ventricle, lungs, and body.
+- If a process, apparatus, cycle, structure, pathway, circuit, timeline, comparison, or hierarchy is important, use a "flow" block or "table" block first.
+- Use a "diagram" block only when the visual can be drawn clearly with simple shapes, such as triangle, circle, cycle, or map.
+- If the topic is triangles, circles, coordinate geometry, surface areas, volumes, maps or directions, include at least one simple "diagram" block.
+- For geometry diagrams, set "shape" when useful: "triangle", "circle", "solid", or "map".
+- Do not create abstract node-and-edge diagrams for human heart, blood circulation, bridge circuits, cells, organs, or apparatus. Use a table or flow instead.
+- Do not write a diagram block where the "items" only say "Diagram", "Label 1", "Label 2", etc. The diagram must be genuinely useful.
 - If Revision Mode is ON, make notes moderately shorter and more bullet-focused.
 - Use 4 to 8 page objects depending on topic size.
 - Each page should have 7 to 12 blocks.
@@ -97,7 +94,7 @@ ALLOWED NOTE BLOCK TYPES:
 - "formula": equation/reaction/formula strip
 - "table": comparison/fact table
 - "flow": process/sequence steps
-- "diagram": useful visual block; use "shape", "diagramType", "visualStyle", "items", "nodes", "edges", "imageUrl", "imageQuery", and "caption" as needed
+- "diagram": simple clear geometry/map/cycle diagram only; use "items" for labels, "shape" for supported shape, and "text" for a short caption
 - "note": warning, remember, or exam tip
 - "example": examples list
 
@@ -129,12 +126,8 @@ STRICT JSON FORMAT:
             "columns": ["string"],
             "rows": [["string"]],
             "steps": ["string"],
-            "shape": "triangle | circle | solid | map | concept | axis | graph | numberLine | venn | matrix | bar | timeline | heart",
-            "diagramType": "flowchart | cycle | hierarchy | comparison | timeline | process | circuit | geometry | graph | numberLine | venn | matrix | apparatus | structure | map | historical-image | geography-photo | civics-photo",
-            "visualStyle": "svg-shapes | real-image",
-            "imageUrl": "string",
-            "imageQuery": "string",
-            "caption": "string",
+            "shape": "triangle | circle | solid | map | concept",
+            "diagramType": "flowchart | cycle | hierarchy | comparison | timeline | process | circuit | geometry | apparatus | structure | map",
             "nodes": ["string"],
             "edges": [["string", "string"]]
           }
@@ -172,5 +165,66 @@ RETURN ONLY VALID JSON.
 `
 }
 
+export const buildExamPrompt = ({ topic, classLevel, examType, questionTypes = [], questionQuantities = {}, difficulty = "mixed" }) => {
+  const counts = questionTypes
+    .map((type) => `${type}: ${Math.max(0, Math.min(Number(questionQuantities[type]) || 0, 30))}`)
+    .filter((item) => !item.endsWith(": 0"))
+    .join(", ");
 
+  return `
+You are a strict JSON generator for an online exam app.
+Return ONLY valid JSON. No markdown, no commentary, no trailing commas.
 
+Create a timed exam on: ${topic}
+Class / level: ${classLevel || "Not specified"}
+Exam type: ${examType || "General"}
+Difficulty: ${difficulty}
+Required question counts: ${counts}
+
+Use the class level and exam type to decide an appropriate, realistic marking scheme and total duration. The paper must be fair for that level. Generate exactly each requested quantity and no unrequested types.
+MCQ: exactly 4 options. True/false: answer must be True or False. Fill blank questions should use ____.
+Every question must include a positive integer "marks" and "suggestedMinutes". Long answers need point-wise model answers. Keep answers hidden from the student; they are for evaluation only.
+
+JSON schema:
+{
+  "mode": "exam",
+  "title": "string",
+  "classLevel": "string",
+  "examType": "string",
+  "exam": {
+    "durationMinutes": 60,
+    "totalMarks": 100,
+    "markingScheme": "Short explanation of marks, negative marking only if appropriate"
+  },
+  "qa": {
+    "short": [{"question":"string","answer":"string","marks":2,"suggestedMinutes":3}],
+    "long": [{"question":"string","answer":["point 1"],"marks":5,"suggestedMinutes":8}],
+    "mcq": [{"question":"string","options":["A","B","C","D"],"answer":"string","explanation":"string","marks":1,"suggestedMinutes":1}],
+    "trueFalse": [{"question":"string","answer":"True","explanation":"string","marks":1,"suggestedMinutes":1}],
+    "fillBlank": [{"question":"string with ____","answer":"string","marks":1,"suggestedMinutes":1}]
+  }
+}
+Include empty arrays for types not requested. Ensure exam.totalMarks equals the sum of all question marks. Return only JSON.
+`;
+};
+
+export const buildExamEvaluationPrompt = ({ exam, answers }) => `
+You are a strict but fair exam evaluator. Return ONLY valid JSON.
+Evaluate the student's submitted answers against this exam paper. Use the class level and exam type context, award partial marks for short and long answers, and score objective answers accurately. Do not award more than each question's marks.
+
+EXAM PAPER:
+${JSON.stringify(exam)}
+
+STUDENT ANSWERS (keyed by question id):
+${JSON.stringify(answers)}
+
+Return exactly this JSON shape:
+{
+  "score": 0,
+  "totalMarks": 0,
+  "percentage": 0,
+  "summary": "short encouraging feedback",
+  "questions": [{"id":"string","marksAwarded":0,"maxMarks":0,"correct":true,"feedback":"short feedback","correctAnswer":"string"}]
+}
+The questions array must include every question in the exam. Return only JSON.
+`;
