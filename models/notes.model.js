@@ -23,7 +23,7 @@ const notesSchema = new mongoose.Schema({
     includeChart: Boolean,
     generatorMode: {
       type: String,
-      enum: ["notes", "questions"],
+      enum: ["notes", "questions", "exam"],
       default: "notes"
     },
     questionTypes: [String],
