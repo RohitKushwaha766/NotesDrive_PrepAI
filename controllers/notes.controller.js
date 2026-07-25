@@ -28,8 +28,10 @@ export const getSingleNotes = async (req, res) => {
             });
         }
         return res.json({
+      id: notes._id,
       content: notes.content,
       topic: notes.topic,
+      generatorMode: notes.generatorMode,
       createdAt: notes.createdAt
     });
     } catch (error) {
